@@ -1,0 +1,15 @@
+[Unit]
+Description=Podman unifi-systemd.service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStartPre=-/sbin/ssh-proxy 'printf '\''%%s\\n'\'' '\''#!/bin/sh'\'' '\''case "$1" in status) if [ "$(/usr/bin/podman inspect -f "{{.State.Running}}" %N 2>&1)" = "true" ]; then echo "%N: $(/usr/bin/podman exec %N systemctl is-system-running 2>/dev/null)"; else echo "%N: stopped"; fi;; start|stop|reload|restart) exec /usr/bin/podman exec unifi-os systemctl "$1" %n | logger -st %N;; shell) exec /usr/bin/podman exec -it %N /bin/bash;; *) echo "Usage: $0 [status start stop reload restart shell]";; esac'\'' >/usr/sbin/%N && chmod 0755 /usr/sbin/%N'
+ExecStart=/sbin/ssh-proxy 'mkdir -p /mnt/data/etc/systemd/system /mnt/data/var/lib/containers && if ! /usr/bin/podman container exists %N; then /usr/bin/podman create --rm --name %N --privileged --net host --hostname "unifi.$(podman exec unifi-os domainname)" --volume /lib/modules:/lib/modules:ro --volume /sys/fs/cgroup:/sys/fs/cgroup:ro --volume /var/run/ssh_proxy_port:/var/run/ssh_proxy_port:ro --volume /mnt/data/podman/storage:/usr/local/share/containers/storage:ro --volume /root:/root --volume /mnt:/mnt --volume /mnt/data/etc/systemd/system:/etc/systemd/system --volume /mnt/data/var/lib/containers:/var/lib/containers ghcr.io/ntkme/systemd-podman:edge; fi && /usr/bin/podman start %N'
+ExecStop=/sbin/ssh-proxy 'if /usr/bin/podman container exists %N; then /usr/bin/podman stop %N; fi'
+ExecReload=/sbin/ssh-proxy 'if /usr/bin/podman container exists %N; then /usr/bin/podman exec %N systemctl daemon-reload; fi'
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

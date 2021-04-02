@@ -1,0 +1,5 @@
+unifi-systemd (1.0.0) stable; urgency=medium
+
+  * Initial release.
+
+ -- Natsume Natsuki <i@ntk.me>  Fri, 01 Jan 2021 18:00:00 -0700

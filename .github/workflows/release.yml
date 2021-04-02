@@ -1,0 +1,55 @@
+name: release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    name: release
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: debian:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: |-
+          apt update
+          apt install -y devscripts
+
+      - name: Build
+        run: |-
+          debuild --build=all --no-sign
+
+      - name: Get Release Asset
+        id: get_release_asset
+        run: |-
+          echo "::set-output name=asset_path::$(echo ../*_all.deb)"
+          echo "::set-output name=asset_name::$(basename ../*_all.deb)"
+          echo "::set-output name=asset_content_type::$(file --brief --mime-type ../*_all.deb)"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.get_release_asset.outputs.asset_path }}
+          asset_name: ${{ steps.get_release_asset.outputs.asset_name }}
+          asset_content_type: ${{ steps.get_release_asset.outputs.asset_content_type }}
