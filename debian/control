@@ -1,0 +1,14 @@
+Source: unifi-systemd
+Section: contrib/utils
+Priority: optional
+Maintainer: Natsume Natsuki <i@ntk.me>
+Build-Depends: debhelper-compat (= 12)
+Standards-Version: 4.3.0
+Homepage: https://github.com/ntkme/unifi-systemd
+#Vcs-Browser: https://github.com/ntkme/unifi-systemd
+#Vcs-Git: https://github.com/ntkme/unifi-systemd.git
+
+Package: unifi-systemd
+Architecture: all
+Depends: ${misc:Depends}
+Description: Unifi systemd service.
